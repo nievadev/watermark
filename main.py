@@ -1,12 +1,36 @@
 from moviepy import editor
+import sys
 
-FILE_NAME = 'example.mp4'
-OUTPUT_NAME = 'final.mp4'
+FILE_NAME = 'toedit.mp4'
+OUTPUT_NAME = 'result.mp4'
 
-clip = editor.VideoFileClip(FILE_NAME)
+def main(args):
+    if len(args) != 4:
+        return False, 'Pelotudo! No escribiste los argumentos bien al iniciar el script!'
 
-txt_clip = editor.TextClip('@voxed.gram', fontsize=30, color='white').set_pos('center').set_duration(10)
+    text_size = 25
 
-final_clip = editor.CompositeVideoClip([clip, txt_clip])
+    text_x = args[1]
+    text_y = args[2]
+    text_color = args[3]
 
-final_clip.write_videofile(OUTPUT_NAME)
+    if len(args) == 5:
+        text_size = args[4]
+
+    text_anchor = text_x, text_y
+
+    clip = editor.VideoFileClip(FILE_NAME)
+
+    txt_clip = editor.TextClip('@voxed.gram', fontsize=text_size, color=text_color).set_position(text_anchor).set_duration(clip.duration)
+
+    final_clip = editor.CompositeVideoClip([clip, txt_clip])
+
+    final_clip.write_videofile(OUTPUT_NAME)
+
+    return True, 'Success!'
+
+if __name__ == '__main__':
+    success, reason = main(sys.argv)
+
+    if not success:
+        print(reason)
