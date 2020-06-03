@@ -35,11 +35,7 @@ def main(args):
     text_x = args[1]
     text_y = args[2]
     text_color = args[3]
-    video_format = args[4]
-
-    for video_file in glob.glob('*.' + video_format):
-        video_name = video_file
-        break
+    video_name = args[4]
 
     print('Video: ' + video_name)
 
