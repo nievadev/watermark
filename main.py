@@ -6,7 +6,7 @@ import os
 OUTPUT_NAME = 'result.mp4'
 LEN_ARGS = 5
 
-clean_filetypes = 'webm', 'mp4', 'gif'
+clean_filetypes = 'webm', 'mp4', 'gif', 'png', 'jpg', 'jpeg'
 
 def clean_files(filetype):
     for file in glob.glob('*.' + filetype):
