@@ -1,4 +1,7 @@
 env
 *.mp4
 *.gif
+*.jpg
+*.jpeg
+*.png
 *.webm
