@@ -10,11 +10,6 @@ IMAGE_EXTENSIONS = 'png', 'jpg', 'jpeg'
 TEXT_MARGIN = 4
 VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
 OUTPUT_NAME = 'result.mp4'
-<<<<<<< HEAD
-LEN_ARGS = 5
-
-clean_filetypes = 'webm', 'mp4', 'gif', 'png', 'jpg', 'jpeg'
-=======
 WATERMARK = '@voxed.gram'
 SUPPORTED_X = ('left', 'center', 'right')
 SUPPORTED_Y = ('top', 'center', 'bottom')
@@ -25,7 +20,6 @@ SUPPORTED_COLORS = {
     'blue' : (0, 0, 255), 
     'green' : (0, 255, 0)
 }
->>>>>>> implementation_click
 
 def clean_files(filetype):
     """Delete files which names end with the filetype specified"""
