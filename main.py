@@ -1,3 +1,4 @@
+# Developer: Martin Nieva (nievadev in GitHub)
 from PIL import ImageDraw, ImageFont, Image
 from moviepy import editor
 import click
@@ -10,7 +11,6 @@ TEXT_MARGIN = 4
 VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
 OUTPUT_NAME = 'result.mp4'
 WATERMARK = '@voxed.gram'
-FONT_PATH = 'courier.ttf'
 SUPPORTED_X = ('left', 'center', 'right')
 SUPPORTED_Y = ('top', 'center', 'bottom')
 SUPPORTED_COLORS = {
@@ -22,7 +22,8 @@ SUPPORTED_COLORS = {
 }
 
 def clean_files(filetype):
-    """Delete files which names end with filetype"""
+    """Delete files which names end with the filetype specified"""
+
     files = glob.glob('*.' + filetype)
 
     if len(files) < 1:
@@ -42,6 +43,8 @@ def clean_files(filetype):
 @click.option('-s', '--size', default=25, help='Specify the size of the text. ')
 @click.argument('filepath')
 def apply_watermark(filepath, color, xy, size):
+    """Apply watermark to photo or video tool"""
+
     if filepath == 'clean':
         print('Cleaning...')
 
@@ -81,7 +84,18 @@ def apply_watermark(filepath, color, xy, size):
 
         img = Image.open(file_)
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(font=FONT_PATH, size=size)
+
+        # Getting the list of all fonts in directory, to get the first occurrence
+        font_path = glob.glob('*.ttf')
+
+        if len(font_path) > 0:
+            font_path = font_path[0] # Get first occurrence
+            font = ImageFont.truetype(font=font_path, size=size)
+        
+        # In case no font is found in the directory
+        else:
+            print('Warning: no font in directory, choosing a better-than-nothing font.')
+            font = ImageFont.load_default().font
 
         # Default, in case the below if statements for any reason don't run (could be that you added more options into SUPPORTED_X or SUPPORTED_Y)
         # For default, we set the position to left and top
@@ -99,7 +113,7 @@ def apply_watermark(filepath, color, xy, size):
                 position_x = img_size_x - text_size_x - TEXT_MARGIN
 
         elif x != 'left':
-            raise click.ClickException('Couldnt set X position, setting to 0. Check SUPPORTED_X global.')
+            print('Warning: couldnt set X position, setting to 0. Check SUPPORTED_X global.')
 
         if y in ('center', 'bottom'):
             img_size_y = img.size[1]
@@ -112,7 +126,7 @@ def apply_watermark(filepath, color, xy, size):
                 position_y = img_size_y - text_size_y - TEXT_MARGIN
 
         elif y != 'top':
-            raise click.ClickException('Couldnt set Y position, setting to 0. Check SUPPORTED_Y global.')
+            print('Warning: couldnt set Y position, setting to 0. Check SUPPORTED_Y global.')
 
         position = position_x, position_y
 
