@@ -9,10 +9,11 @@ import sys
 IMAGE_EXTENSIONS = 'png', 'jpg', 'jpeg'
 TEXT_MARGIN = 4
 VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
+OTHER_DELETE_EXTENSIONS = '', 
 OUTPUT_NAME = 'result.mp4'
 WATERMARK = '@voxed.gram'
-SUPPORTED_X = ('left', 'center', 'right')
-SUPPORTED_Y = ('top', 'center', 'bottom')
+SUPPORTED_X = 'left', 'center', 'right'
+SUPPORTED_Y = 'top', 'center', 'bottom'
 SUPPORTED_COLORS = {
     'black' : (0, 0, 0), 
     'white' : (255, 255, 255), 
@@ -48,7 +49,7 @@ def apply_watermark(filepath, color, xy, size):
     if filepath == 'clean':
         print('Cleaning...')
 
-        for filetype in IMAGE_EXTENSIONS + VIDEO_EXTENSIONS:
+        for filetype in IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + OTHER_DELETE_EXTENSIONS:
             clean_files(filetype)
 
         print('Done. ')
