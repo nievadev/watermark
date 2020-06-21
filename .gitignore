@@ -6,3 +6,5 @@ env
 *.png
 *.webm
 *REMOVE_ME
+__pycache__
+.env
