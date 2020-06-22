@@ -8,6 +8,8 @@ import glob
 import os
 import sys
 
+# todo: implement the new methods I wrote of Color object
+
 text = Color()
 
 IMAGE_EXTENSIONS = 'png', 'jpg', 'jpeg'

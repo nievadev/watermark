@@ -22,5 +22,17 @@ class Color:
     def reset(self):
         print(colorama.Style.RESET_ALL, end='')
 
+    def print_error(self, text, **kwargs):
+        self.print_color('Error: ', color='red', style='bright')
+        print(text, **kwargs)
+
+    def print_warning(self, text, **kwargs):
+        self.print_color('Warning: ', color='yellow', style='bright')
+        print(text, **kwargs)
+
+    def print_success(self, text, **kwargs):
+        self.print_color('Success: ', color='green', style='bright')
+        print(text, **kwargs)
+
     def __del__(self):
         colorama.deinit()
