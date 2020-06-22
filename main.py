@@ -1,6 +1,9 @@
 from bs4 import BeautifulSoup as bs
-from Color import Color
 import os, requests, platform, time, cursor, re
+from lib.Color import Color
+from lib.Vox import Vox
+from lib.Watermark import Watermark
+from lib.Menu import Menu
 
 text = Color()
 
@@ -9,25 +12,6 @@ PLATFORM = platform.system()
 NEXT_PAGE = 'n'
 PREVIOUS_PAGE = 'b'
 KEYBINDS = NEXT_PAGE, PREVIOUS_PAGE
-
-def clean_screen():
-    if PLATFORM == 'Windows':
-        os.system('cls')
-
-    elif PLATFORM == 'Linux':
-        os.system('clear')
-
-def validate_input(chosen, index, max_length) -> bool:
-    if chosen in KEYBINDS:
-        return True, 'pressed key'
-
-    elif not chosen.isdigit():
-        return False, 'not valid option. Trying again... '
-
-    elif not max_length >= int(chosen) > index:
-        return False, 'out of range'
-
-    return True, 'validated input'
 
 def extract_vox_data(voxs):
     voxs_list = list()
@@ -58,102 +42,48 @@ def extract_vox_data(voxs):
 
     return voxs_list
 
-def start_menu(options_list, max_per_page=10):
-    index = 0
-    in_screen = max_per_page
-
-    if len(options_list) < max_per_page:
-        in_screen = len(options_list)
-
-    while True:
-        clean_screen()
-
-        cursor.hide()
-    
-        print()
-
-        text.print_color('Menu: ', color='blue', style='bright', newline=True)
-
-        for i in range(index, in_screen):
-            vox = options_list[i]
-            print(i + 1, '->', vox.get('title', 'notitle'), f'({vox.get("comments", "0")})')
-
-        print('Press ' + NEXT_PAGE.upper() + ' to go to the next page.')
-        print('Press ' + PREVIOUS_PAGE.upper() + ' to go to the previous page.')
-        print()
-
-        pressed_key = input(f'Choose vox [{index + 1}/{in_screen}]: ').strip().lower()
-
-        print()
-
-        success, reason = validate_input(pressed_key, index, in_screen)
-
-        if not success:
-            text.print_error(reason)
-            time.sleep(0.5)
-
-            continue
-
-        elif reason == 'pressed key':
-            if pressed_key == 'n':
-                if in_screen == len(options_list):
-                    continue
-
-                index += max_per_page
-
-                if in_screen + max_per_page > len(options_list):
-                    in_screen = len(options_list)
-
-                    continue
-
-                in_screen += max_per_page
-
-            elif pressed_key == 'b':
-                if index - max_per_page < 0:
-                    continue
-
-                index -= max_per_page
-            
-                if in_screen == len(options_list):
-                    in_screen = index + max_per_page
-
-                    continue
-
-                in_screen -= max_per_page
-
-            continue
-
-        vox_chosen = int(pressed_key) - 1
-
-        text.print_success(reason)
-        cursor.show()
-
-        break
-
-    return vox_chosen
-
 def main():
+    print('Getting voxed\'s HTML...')
+
     response = requests.get(VOXED_URL)
 
     if not response.status_code == 200:
         text.print_error('couldnt request the voxed HTML code. Response status code: ' + str(response.status_code))
         exit()
 
+    text.print_success('got voxed\'s HTML code')
+
     parsed = bs(response.text, 'html.parser')
+
+    darkmode = True if 'darkmode' in parsed.find('html').attrs.get('class') else False
 
     voxs = parsed.select('div#voxList a')
 
     voxs_list = extract_vox_data(voxs)
-
     voxs_list = sorted(voxs_list, key=lambda x: x.get('comments'), reverse=True)
 
-    vox_chosen = start_menu(voxs_list, 10)
+    menu = Menu(voxs_list, options={ 'max_per_page' : 10, 'ask_message' : 'Pick one kjj' })
 
-    print(voxs_list[vox_chosen])
+    vox_chosen = menu.start()
+    vox_chosen = voxs_list[vox_chosen]
+
+    print(f'Vox: "{ vox_chosen.get("title", "No title") }", { vox_chosen.get("comments", 0) } comments')
+
+    vox = Vox(vox_chosen.get('url', ''))
+    vox.make_image('final_vox.png')
+
+    if darkmode:
+        print('Applying watermark... (xy -> right top, detected darkmode so color -> white)')
+        color = 'white'
+
+    else:
+        print('Applying watermark... (xy -> right top, not detected darkmode so color -> black)')
+        color = 'black'
+
+    watermark = Watermark(vox.path, color, ('right', 'top'), 25)
+    watermark.export(True)
 
 if __name__ == '__main__':
     main()
 
 # test_url = 'https://upload.voxed.net/SmF9oeVRnrH98KQKfShq.jpg'
-# filename, extension = download_file(test_url, 'downloaded')
-# text.print_success('exported file as \'' + filename + extension + '\'.')

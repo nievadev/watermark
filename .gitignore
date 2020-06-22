@@ -8,3 +8,4 @@ env
 *REMOVE_ME
 __pycache__
 .env
+*.log
