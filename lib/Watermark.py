@@ -38,7 +38,7 @@ class Watermark:
     VIDEO_EXPORT_EXTENSION = 'mp4'
     TEXT_MARGIN = 4
     VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
-    OTHER_DELETE_EXTENSIONS = '', 
+    OTHER_DELETE_EXTENSIONS = 'log', 
     OUTPUT_NAME = 'result'
     WATERMARK = '@el.rincon.voxero'
     INSULT_NAME = 'Ignacio'
