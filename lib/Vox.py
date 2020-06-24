@@ -1,10 +1,25 @@
+import platform
 import sys
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from pathlib import Path
 from PIL import Image
-from .Color import Color
+from . import Color
 
 text = Color()
+
+SYSTEM = platform.system()
+DRIVER = Path('.').resolve()
+
+if SYSTEM == 'Windows':
+    DRIVER = str(DRIVER / 'lib' / 'geckodriver.exe')
+
+elif SYSTEM == 'Linux':
+    DRIVER = str(DRIVER / 'lib' / 'geckodriver')
+
+else:
+    text.print_error('didnt recognize the system you are in. Aborting.')
+    quit()
 
 class Vox:
     def __init__(self, url):
@@ -14,7 +29,7 @@ class Vox:
 
         self.url = url
 
-        self.driver = webdriver.Firefox(options=self.options, executable_path='bin/geckodriver')
+        self.driver = webdriver.Firefox(options=self.options, executable_path=DRIVER)
 
         self.driver.get(url)
         self.content = self.driver.find_element_by_css_selector('section.voxData')
@@ -39,3 +54,6 @@ class Vox:
         self.image.save(self.path)
 
         text.print_success('image composited successfully. ')
+
+    def __del__(self):
+        self.driver.quit()

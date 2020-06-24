@@ -1,5 +1,5 @@
 import requests, os
-from Color import Color
+from . import Color
 
 text = Color()
 

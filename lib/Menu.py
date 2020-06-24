@@ -1,5 +1,5 @@
 import os, cursor, platform, time
-from .Color import Color
+from . import Color
 
 PLATFORM = platform.system()
 

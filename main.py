@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup as bs
-import os, requests, platform, time, cursor, re
+import requests
+import platform
 from lib.Color import Color
 from lib.Vox import Vox
 from lib.Watermark import Watermark
@@ -13,15 +14,17 @@ NEXT_PAGE = 'n'
 PREVIOUS_PAGE = 'b'
 KEYBINDS = NEXT_PAGE, PREVIOUS_PAGE
 
+
 def extract_vox_data(voxs):
     voxs_list = list()
 
     for vox in voxs:
         info = dict()
 
-        comments = vox.select_one('div.voxHeader div.voxComments.textShadon span')
+        css_selector = 'div.voxHeader div.voxComments.textShadon span'
+        comments = vox.select_one(css_selector)
 
-        if comments == None:
+        if comments is None:
             continue
 
         url = VOXED_URL + vox.attrs.get('href')
@@ -34,13 +37,14 @@ def extract_vox_data(voxs):
         # match = re.search(r'url\(.*\)', style)
 
         # image_url = style[match.start():match.end()]
-        # image_url = image_url[image_url.find('(') + 1:image_url.find(')')].strip()
+        # image_url = image_url[image_url.find('(') + 1:image_url.find(')')].strip() # NOQA
 
         # info['image_url'] = image_url
 
         voxs_list.append(info)
 
     return voxs_list
+
 
 def main():
     print('Getting voxed\'s HTML...')
