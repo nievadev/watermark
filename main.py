@@ -71,10 +71,16 @@ def main():
     vox_chosen = menu.start()
     vox_chosen = voxs_list[vox_chosen]
 
-    print(f'Vox: "{ vox_chosen.get("title", "No title") }", { vox_chosen.get("comments", 0) } comments')
+    title = vox_chosen.get("title", "No title")
+    comments = vox_chosen.get("comments", "No comments")
+    url = vox_chosen.get("url", "No url")
 
-    vox = Vox(vox_chosen.get('url', ''))
-    vox.make_image('final_vox.png')
+    print(f'Vox: \'{title}\', {comments} comments, {url}')
+
+    vox = Vox(url)
+    vox.make_image('vox.png')
+
+    # comments = vox.get_comments()
 
     if darkmode:
         print('Applying watermark... (xy -> right top, detected darkmode so color -> white)')
@@ -86,6 +92,8 @@ def main():
 
     watermark = Watermark(vox.path, color, ('right', 'top'), 25)
     watermark.export(True)
+
+    vox.quit()
 
 if __name__ == '__main__':
     main()

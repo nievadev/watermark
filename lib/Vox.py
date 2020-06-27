@@ -55,5 +55,5 @@ class Vox:
 
         text.print_success('image composited successfully. ')
 
-    def __del__(self):
+    def quit(self):
         self.driver.quit()
