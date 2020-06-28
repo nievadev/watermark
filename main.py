@@ -1,7 +1,6 @@
-from bs4 import BeautifulSoup as bs
 import requests
 import platform
-import colorama
+from bs4 import BeautifulSoup as bs
 from lib.Color import Color
 from lib.Vox import Vox
 from lib.Watermark import Watermark
@@ -31,7 +30,9 @@ def parse_voxs(voxs):
 
         url = VOXED_URL + vox.attrs.get('href')
 
-        info['title'] = colorama.Style.BRIGHT + vox.select_one('h4').getText() + colorama.Style.RESET_ALL
+        # I define the t variable so flakes8 doesn't whine
+        t = text.get_changed(vox.select_one('h4').getText(), style='bright')
+        info['title'] = t
         info['comments'] = int(comments.getText())
         info['url'] = url
 
@@ -46,19 +47,27 @@ def main():
     response = requests.get(VOXED_URL)
 
     if not response.status_code == 200:
-        text.print_error('couldnt request the voxed HTML code. Response status code: ' + str(response.status_code))
+        m = 'couldnt request the voxed HTML code. Response status code: '
+        text.print_error(m + str(response.status_code))
         exit()
 
     text.print_success('got voxed\'s HTML code')
 
     parsed = bs(response.text, 'html.parser')
 
-    darkmode = True if 'darkmode' in parsed.find('html').attrs.get('class') else False
+    darkmode = False
+
+    if 'darkmode' in parsed.find('html').attrs.get('class'):
+        darkmode = True
 
     voxs = parsed.select('div#voxList a')
 
     voxs_list = parse_voxs(voxs)
-    voxs_list = sorted(voxs_list, key=lambda x: x.get('comments'), reverse=True)
+    voxs_list = sorted(
+        voxs_list,
+        key=lambda x: x.get('comments'),
+        reverse=True
+    )
 
     menu = Menu(voxs_list, {
         'max_per_page': 10,
@@ -79,7 +88,10 @@ def main():
     comment_choices = list()
 
     for i in range(COMMENTS_PER_IMAGE):
-        menu = Menu(vox.comments, {'above_message': f'Vox: {title}, {comments} comments'}, 'comment', 'id')
+        menu = Menu(vox.comments, {
+            'above_message': f'Vox: {title}, {comments} comments'
+        }, 'comment', 'id')
+
         chosen = menu.start()
 
         comment_choices.append(chosen)
@@ -87,11 +99,11 @@ def main():
     vox.make_image('vox.png')
 
     if darkmode:
-        print('Applying watermark... (xy -> right top, detected darkmode so color -> white)')
+        print('Applying watermark... (right top, white)')
         color = 'white'
 
     else:
-        print('Applying watermark... (xy -> right top, not detected darkmode so color -> black)')
+        print('Applying watermark... (right top, black)')
         color = 'black'
 
     watermark = Watermark(vox.path, color, ('right', 'top'), 25)

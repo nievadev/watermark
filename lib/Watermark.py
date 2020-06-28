@@ -5,11 +5,11 @@ from moviepy import editor
 from . import Color
 import glob
 import os
-import sys
 
 text = Color()
 
-EXCEPTION_FILES = 'test.png', 
+EXCEPTION_FILES = 'test.png',
+
 
 def clean_files(filetype):
     """Delete files which names end with the filetype specified"""
@@ -32,24 +32,25 @@ def clean_files(filetype):
 
         text.print_color('done', color='green', style='bright', newline=True)
 
+
 class Watermark:
     IMAGE_EXTENSIONS = 'png', 'jpg', 'jpeg'
     IMAGE_EXPORT_EXTENSION = 'jpg'
-    VIDEO_EXPORT_EXTENSION = 'mp4'
-    TEXT_MARGIN = 4
     VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
-    OTHER_DELETE_EXTENSIONS = 'log', 
+    VIDEO_EXPORT_EXTENSION = 'mp4'
+    DELETE_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + 'log'
+    VALID_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
     OUTPUT_NAME = 'result'
     WATERMARK = '@el.rincon.voxero'
-    INSULT_NAME = 'Ignacio'
+    TEXT_MARGIN = 4
     SUPPORTED_X = 'left', 'center', 'right'
     SUPPORTED_Y = 'top', 'center', 'bottom'
     SUPPORTED_COLORS = {
-        'black' : (0, 0, 0), 
-        'white' : (255, 255, 255), 
-        'red' : (255, 0, 0), 
-        'blue' : (0, 0, 255), 
-        'green' : (0, 255, 0)
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+        'red': (255, 0, 0),
+        'blue': (0, 0, 255),
+        'green': (0, 255, 0)
     }
 
     def __init__(self, filepath, color, xy, size):
@@ -69,7 +70,7 @@ class Watermark:
         if self.filepath == 'clean':
             print('Cleaning...')
 
-            for filetype in Watermark.IMAGE_EXTENSIONS + Watermark.VIDEO_EXTENSIONS + Watermark.OTHER_DELETE_EXTENSIONS:
+            for filetype in Watermark.DELETE_EXTENSIONS:
                 clean_files(filetype)
 
             text.print_success('done')
@@ -79,21 +80,29 @@ class Watermark:
         self.x, self.y = self.xy[0], self.xy[1]
 
         if self.x not in Watermark.SUPPORTED_X:
-            raise click.ClickException(Watermark.INSULT_NAME + ' pelotudo!! La opcion ' + self.x + ' no es valida carajo!!!')
+            m = self.x + 'option is not valid'
+            text.print_error(m)
+            quit()
 
         if self.y not in Watermark.SUPPORTED_Y:
-            raise click.ClickException(Watermark.INSULT_NAME + ' pelotudo!! La opcion ' + self.y + ' no es valida carajo!!!')
+            m = self.y + 'option is not valid'
+            text.print_error(m)
+            quit()
 
         # If we don't find the file, abort
         if not os.path.isfile(self.filepath):
-            raise click.ClickException(Watermark.INSULT_NAME + ' pelotudo!! No existe ese archivo, de que pija me hablas?')
+            m = 'didnt find the file ' + self.filepath
+            text.print_error(m)
+            quit()
 
-        if self.extension[1:] in Watermark.IMAGE_EXTENSIONS + Watermark.VIDEO_EXTENSIONS:
+        if self.extension[1:] in Watermark.VALID_EXTENSIONS:
             print('Recognized file: ' + self.filepath)
 
         # If we don't support the file self.extension, abort
         else:
-            raise click.ClickException(Watermark.INSULT_NAME + ' pelotudo!! Esa extension no es soportada carajo!')
+            m = 'extension ' + self.extension + ' not supported'
+            text.print_error(m)
+            quit()
 
         # If the file is an image
         if self.extension[1:] in Watermark.IMAGE_EXTENSIONS:
@@ -111,22 +120,26 @@ class Watermark:
         img = Image.open(self.filepath)
         draw = ImageDraw.Draw(img)
 
-        # Getting the list of all fonts in directory, to get the first occurrence
+        # Getting the first ocurrence of all ttf files in the directory
         font_path = glob.glob('*.ttf')
 
         if len(font_path) > 0:
-            font_path = font_path[0] # Get first occurrence
+            # Get first occurrence
+            font_path = font_path[0]
             font = ImageFont.truetype(font=font_path, size=self.size)
-        
+
         # In case no font is found in the directory
         else:
-            text.print_warning('no font in directory, choosing a better-than-nothing font')
+            m = 'no font in directory, choosing a better-than-nothing font'
+            text.print_warning(m)
 
             font = ImageFont.load_default()
 
-        # Default, in case the below if statements for any reason don't run (could be that you added more options into SUPPORTED_X or SUPPORTED_Y)
+        # Default, in case the below if statements for any reason don't run
+        # (you may have added more options into SUPPORTED_X or SUPPORTED_Y)
         # For default, we set the position to left and top
-        position_x, position_y = 0 + Watermark.TEXT_MARGIN, 0 + Watermark.TEXT_MARGIN
+        position_x = 0 + Watermark.TEXT_MARGIN
+        position_y = 0 + Watermark.TEXT_MARGIN
 
         # Doing some calculus in order to position the text correctly
         if self.x in ('center', 'right'):
@@ -140,7 +153,8 @@ class Watermark:
                 position_x = img_size_x - text_size_x - Watermark.TEXT_MARGIN
 
         elif self.x != 'left':
-            text.print_warning('couldnt set X position, setting to 0. Check SUPPORTED_X global')
+            m = 'couldnt set X position, setting to 0. Check SUPPORTED_X'
+            text.print_warning(m)
 
         if self.y in ('center', 'bottom'):
             img_size_y = img.size[1]
@@ -153,21 +167,29 @@ class Watermark:
                 position_y = img_size_y - text_size_y - Watermark.TEXT_MARGIN
 
         elif self.y != 'top':
-            text.print_warning('couldnt set Y position, setting to 0. Check SUPPORTED_Y global')
+            m = 'couldnt set Y position, setting to 0. Check SUPPORTED_Y'
+            text.print_warning(m)
 
         position = position_x, position_y
 
-        draw.text(position, Watermark.WATERMARK, Watermark.SUPPORTED_COLORS.get(self.color, (255, 255, 255)), font=font)
+        draw.text(
+            position,
+            Watermark.WATERMARK,
+            Watermark.SUPPORTED_COLORS.get(self.color, (255, 255, 255)),
+            font=font
+        )
 
         img = img.convert('RGB')
 
         def export(as_path=False):
             if as_path:
-                img.save(self.filename + '.' + Watermark.IMAGE_EXPORT_EXTENSION)
+                _as = f'{self.filename}.{Watermark.IMAGE_EXPORT_EXTENSION}'
+                img.save(_as)
 
                 return
 
-            img.save(Watermark.OUTPUT_NAME + '.' + Watermark.IMAGE_EXPORT_EXTENSION)
+            _as = f'{Watermark.OUTPUT_NAME}.{Watermark.IMAGE_EXPORT_EXTENSION}'
+            img.save(_as)
 
         self.export = export
 
@@ -176,16 +198,24 @@ class Watermark:
 
         clip = editor.VideoFileClip(self.filepath)
 
-        txt_clip = editor.TextClip(Watermark.WATERMARK, fontsize=self.size, color=self.color).set_position(self.xy).set_duration(clip.duration)
+        txt_clip = editor.TextClip(
+            Watermark.WATERMARK,
+            fontsize=self.size,
+            color=self.color
+        )
+
+        txt_clip = txt_clip.set_position(self.xy).set_duration(clip.duration)
 
         final_clip = editor.CompositeVideoClip([clip, txt_clip])
 
         def export(as_path=False):
             if as_path:
-                final_clip.write_videofile(self.filename + '.' + Watermark.VIDEO_EXPORT_EXTENSION)
+                _as = f'{self.filename}.{Watermark.VIDEO_EXPORT_EXTENSION}'
+                final_clip.write_videofile(_as)
 
                 return
 
-            final_clip.write_videofile(Watermark.OUTPUT_NAME + '.' + Watermark.VIDEO_EXPORT_EXTENSION)
+            _as = f'{Watermark.OUTPUT_NAME}.{Watermark.VIDEO_EXPORT_EXTENSION}'
+            final_clip.write_videofile(_as)
 
         self.export = export

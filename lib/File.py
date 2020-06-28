@@ -1,7 +1,9 @@
-import requests, os
+import requests
+import os
 from . import Color
 
 text = Color()
+
 
 class File:
     def __init__(self, file_url):
@@ -14,7 +16,8 @@ class File:
         self.response = requests.get(self.file_url)
 
         if not self.response.status_code == 200:
-            text.print_error('cant get file, got status code ' + str(self.response.status_code))
+            m = 'cant get file, got status code '
+            text.print_error(m + str(self.response.status_code))
 
             exit()
 
@@ -25,7 +28,8 @@ class File:
 
         if os.path.isfile(self.export_filename):
             while True:
-                text.print_warning('the file ' + self.export_filename + ' already exists. Overwrite? [y/n]: ', end='')
+                m = f'the file {self.export_filename} already exists. '
+                text.print_warning(m + 'Overwrite? [y/n]: ', end='')
                 answer = input().lower().strip()
 
                 if answer == 'n':
@@ -47,6 +51,7 @@ class File:
 
         text.print_success('downloaded file with no issues')
         return self.export_filename
+
 
 f = File('https://upload.voxed.net/SmF9oeVRnrH98KQKfShq.jpg')
 f.export()

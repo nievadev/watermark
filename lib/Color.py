@@ -1,5 +1,6 @@
 import colorama
 
+
 class Color:
     def __init__(self):
         colorama.init()
@@ -12,6 +13,12 @@ class Color:
         print(text, end=end)
 
         self.reset()
+
+    def get_changed(self, text, color='white', style='normal'):
+        style = getattr(colorama.Style, style.upper())
+        color = getattr(colorama.Fore, color.upper())
+
+        return style + color + text + colorama.Style.RESET_ALL
 
     def set_color(self, color):
         print(getattr(colorama.Fore, color.upper()), end='')

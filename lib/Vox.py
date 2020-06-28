@@ -1,14 +1,10 @@
 import platform
-import sys
-import requests
 import re
-import colorama
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from pathlib import Path
 from PIL import Image
 from . import Color
-from bs4 import BeautifulSoup as bs
 
 text = Color()
 
@@ -25,6 +21,7 @@ else:
     text.print_error('didnt recognize the system you are in. Aborting.')
     quit()
 
+
 class Vox:
     def __init__(self, url):
         print('Getting vox\'s information...')
@@ -34,7 +31,7 @@ class Vox:
         self.url = url
 
         self.driver = webdriver.Firefox(
-            options=self.options, 
+            options=self.options,
             executable_path=DRIVER
         )
 
@@ -46,20 +43,25 @@ class Vox:
         self.comments = list()
 
         for comment in self.driver.find_elements_by_css_selector('.comment'):
-            comment_text = comment.find_element_by_css_selector('.commentContent').text
+            selector = '.commentContent'
+            comment_text = comment.find_element_by_css_selector(selector).text
             regex = re.findall(r'(>>[A-Z\d]{7})\n*', comment_text)
 
             for match in regex:
                 comment_text = comment_text.replace(match, '')
 
             comment_text = comment_text.strip()
-            
+
             if len(comment_text) <= 0:
                 continue
 
             self.comments.append({
                 'comment': comment_text,
-                'id': colorama.Fore.YELLOW + colorama.Style.BRIGHT + comment.get_attribute('id') + colorama.Style.RESET_ALL
+                'id': text.get_changed(
+                    comment.get_attribute('id'),
+                    style='bright',
+                    color='yellow'
+                )
             })
 
         text.print_success('got vox\'s complete information.')
@@ -77,7 +79,7 @@ class Vox:
         x2, y2 = location['x'] + size['width'], location['y'] + size['height']
 
         self.image = Image.open(self.path)
-        self.image = self.image.crop(( x, y, x2, y2 ))
+        self.image = self.image.crop((x, y, x2, y2))
 
         self.image.save(self.path)
 

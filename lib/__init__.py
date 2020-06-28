@@ -1,2 +1,2 @@
-from .Color import Color
-from .Watermark import Watermark
+from .Color import Color # NOQA
+from .Watermark import Watermark # NOQA

@@ -2,12 +2,12 @@ import os
 import cursor
 import platform
 import time
-import colorama
 from . import Color
 
 PLATFORM = platform.system()
 
 text = Color()
+
 
 def clean_screen():
     if PLATFORM == 'Windows':
@@ -15,6 +15,7 @@ def clean_screen():
 
     elif PLATFORM == 'Linux':
         os.system('clear')
+
 
 class Menu:
     def __init__(self, options_list, options, *args):
@@ -29,14 +30,14 @@ class Menu:
         self.ask_message = options.get('ask_message', 'Choose one')
         self.max_per_page = options.get('max_per_page', 10)
         self.above_message = options.get('above_message', '')
-        
+
         self.in_screen = self.max_per_page
 
         self.args = args
 
         if len(self.options_list) < self.max_per_page:
             self.in_screen = len(self.options_list)
-         
+
     def __del__(self):
         cursor.show()
 
@@ -57,18 +58,24 @@ class Menu:
 
         while True:
             clean_screen()
-        
+
             print()
 
             if len(self.above_message) > 0:
                 print(self.above_message)
 
-            text.print_color('Menu: ', color='green', style='bright', newline=True)
+            text.print_color(
+                'Menu: ',
+                color='green',
+                style='bright',
+                newline=True
+            )
 
             for i in range(self.index, self.in_screen):
                 options = self.options_list[i]
-                print(colorama.Style.BRIGHT + str(i + 1) + colorama.Style.RESET_ALL + ' -> ', end='')
-                
+                print(text.get_changed(str(i + 1), style='bright'), end='')
+                print(' -> ', end='')
+
                 for i, key in enumerate(self.args):
                     print(str(key) + ': ' + str(options.get(key, '')), end='')
 
@@ -78,13 +85,26 @@ class Menu:
                     else:
                         print('; ', end='')
 
-            # TODO: wrap in functions Color class
-            print('Press ' + colorama.Style.BRIGHT + colorama.Fore.GREEN + self.next_page.upper() + colorama.Style.RESET_ALL + ' to go to the next page.')
-            print('Press ' + colorama.Style.BRIGHT + colorama.Fore.GREEN + self.previous_page.upper() + colorama.Style.RESET_ALL + ' to go to the previous page.')
+            np = text.get_changed(
+                self.next_page.upper(),
+                color='green',
+                style='bright'
+            )
+
+            pp = text.get_changed(
+                self.previous_page.upper(),
+                color='green',
+                style='bright'
+            )
+
+            print('Press ' + np + ' to go to the next page.')
+            print('Press ' + pp + ' to go to the previous page.')
             print()
 
+            im = f'{self.ask_message} [{self.index + 1}/{self.in_screen}]: '
+
             try:
-                pressed_key = input(f'{self.ask_message} [{self.index + 1}/{self.in_screen}]: ').strip().lower()
+                pressed_key = input(im).strip().lower()
 
             except KeyboardInterrupt:
                 print()
@@ -107,7 +127,9 @@ class Menu:
 
                     self.index += self.max_per_page
 
-                    if self.in_screen + self.max_per_page > len(self.options_list):
+                    l_options_list = len(self.options_list)
+
+                    if self.in_screen + self.max_per_page > l_options_list:
                         self.in_screen = len(self.options_list)
 
                         continue
@@ -119,7 +141,7 @@ class Menu:
                         continue
 
                     self.index -= self.max_per_page
-                
+
                     if self.in_screen == len(self.options_list):
                         self.in_screen = self.index + self.max_per_page
 
