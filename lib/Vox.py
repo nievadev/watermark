@@ -1,10 +1,14 @@
 import platform
 import sys
+import requests
+import re
+import colorama
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from pathlib import Path
 from PIL import Image
 from . import Color
+from bs4 import BeautifulSoup as bs
 
 text = Color()
 
@@ -29,10 +33,34 @@ class Vox:
 
         self.url = url
 
-        self.driver = webdriver.Firefox(options=self.options, executable_path=DRIVER)
+        self.driver = webdriver.Firefox(
+            options=self.options, 
+            executable_path=DRIVER
+        )
 
         self.driver.get(url)
-        self.content = self.driver.find_element_by_css_selector('section.voxData')
+        self.content = self.driver.find_element_by_css_selector(
+            'section.voxData'
+        )
+
+        self.comments = list()
+
+        for comment in self.driver.find_elements_by_css_selector('.comment'):
+            comment_text = comment.find_element_by_css_selector('.commentContent').text
+            regex = re.findall(r'(>>[A-Z\d]{7})\n*', comment_text)
+
+            for match in regex:
+                comment_text = comment_text.replace(match, '')
+
+            comment_text = comment_text.strip()
+            
+            if len(comment_text) <= 0:
+                continue
+
+            self.comments.append({
+                'comment': comment_text,
+                'id': colorama.Fore.YELLOW + colorama.Style.BRIGHT + comment.get_attribute('id') + colorama.Style.RESET_ALL
+            })
 
         text.print_success('got vox\'s complete information.')
 
@@ -55,5 +83,10 @@ class Vox:
 
         text.print_success('image composited successfully. ')
 
-    def quit(self):
+    def make_comments_image(self):
+        return
+
+    def __del__(self):
+        print('Quitting driver...')
         self.driver.quit()
+        text.print_success('done')

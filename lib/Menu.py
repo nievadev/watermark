@@ -1,4 +1,8 @@
-import os, cursor, platform, time
+import os
+import cursor
+import platform
+import time
+import colorama
 from . import Color
 
 PLATFORM = platform.system()
@@ -13,7 +17,9 @@ def clean_screen():
         os.system('clear')
 
 class Menu:
-    def __init__(self, options_list, options=dict()):
+    def __init__(self, options_list, options, *args):
+        # TODO assert
+
         self.options_list = options_list
         self.index = 0
         self.next_page = 'n'
@@ -22,8 +28,11 @@ class Menu:
 
         self.ask_message = options.get('ask_message', 'Choose one')
         self.max_per_page = options.get('max_per_page', 10)
-
+        self.above_message = options.get('above_message', '')
+        
         self.in_screen = self.max_per_page
+
+        self.args = args
 
         if len(self.options_list) < self.max_per_page:
             self.in_screen = len(self.options_list)
@@ -44,21 +53,34 @@ class Menu:
         return True, 'validated input'
 
     def start(self):
+        cursor.hide()
+
         while True:
             clean_screen()
-
-            cursor.hide()
         
             print()
 
-            text.print_color('Menu: ', color='blue', style='bright', newline=True)
+            if len(self.above_message) > 0:
+                print(self.above_message)
+
+            text.print_color('Menu: ', color='green', style='bright', newline=True)
 
             for i in range(self.index, self.in_screen):
-                vox = self.options_list[i]
-                print(i + 1, '->', vox.get('title', 'notitle'), f'({vox.get("comments", "0")})')
+                options = self.options_list[i]
+                print(colorama.Style.BRIGHT + str(i + 1) + colorama.Style.RESET_ALL + ' -> ', end='')
+                
+                for i, key in enumerate(self.args):
+                    print(str(key) + ': ' + str(options.get(key, '')), end='')
 
-            print('Press ' + self.next_page.upper() + ' to go to the next page.')
-            print('Press ' + self.previous_page.upper() + ' to go to the previous page.')
+                    if i == len(self.args) - 1:
+                        print()
+
+                    else:
+                        print('; ', end='')
+
+            # TODO: wrap in functions Color class
+            print('Press ' + colorama.Style.BRIGHT + colorama.Fore.GREEN + self.next_page.upper() + colorama.Style.RESET_ALL + ' to go to the next page.')
+            print('Press ' + colorama.Style.BRIGHT + colorama.Fore.GREEN + self.previous_page.upper() + colorama.Style.RESET_ALL + ' to go to the previous page.')
             print()
 
             try:
