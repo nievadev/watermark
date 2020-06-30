@@ -1,5 +1,8 @@
+# TODO: implement url argument
+
 import requests
 import platform
+import time
 from bs4 import BeautifulSoup as bs
 from lib.Color import Color
 from lib.Vox import Vox
@@ -30,7 +33,6 @@ def parse_voxs(voxs):
 
         url = VOXED_URL + vox.attrs.get('href')
 
-        # I define the t variable so flakes8 doesn't whine
         t = text.get_changed(vox.select_one('h4').getText(), style='bright')
         info['title'] = t
         info['comments'] = int(comments.getText())
@@ -84,18 +86,6 @@ def main():
     print(f'Vox: \'{title}\', {comments} comments, {url}')
 
     vox = Vox(url)
-
-    comment_choices = list()
-
-    for i in range(COMMENTS_PER_IMAGE):
-        menu = Menu(vox.comments, {
-            'above_message': f'Vox: {title}, {comments} comments'
-        }, 'comment', 'id')
-
-        chosen = menu.start()
-
-        comment_choices.append(chosen)
-
     vox.make_image('vox.png')
 
     if darkmode:
@@ -107,9 +97,48 @@ def main():
         color = 'black'
 
     watermark = Watermark(vox.path, color, ('right', 'top'), 25)
+
     watermark.export(True)
 
-    del vox
+    comment_choices = list()
+
+    comments_menu_max_per_page = 10
+
+    index = 0
+    max_per_page = comments_menu_max_per_page
+
+    for i in range(COMMENTS_PER_IMAGE):
+        t1 = f'Comments grabbed: {[ c + 1 for c in comment_choices]}'
+        t2 = f'Vox: {title}, {comments} comments, url: {url}'
+        t3 = f'Description: {vox.description}'
+        t4 = f'Image url: {vox.image_url}'
+        above_message = f'{t1}\n{t2}\n{t3}\n{t4}\n'
+
+        menu = Menu(vox.comments, {
+            'above_message': above_message,
+            'ask_message': f'Pick {COMMENTS_PER_IMAGE} comments',
+            'max_per_page': comments_menu_max_per_page,
+        }, 'comment', 'id')
+
+        menu.index = index
+        menu.in_screen = max_per_page
+
+        chosen = menu.start()
+
+        index = menu.index
+        max_per_page = menu.in_screen
+
+        comment_choices.append(chosen)
+
+    comments_chosen = [ vox.comments[n] for n in comment_choices ]
+
+    filename = vox.make_comments_image(comments_chosen)
+
+    watermark = Watermark(filename, color, ('right', 'top'), 25)
+
+    watermark.export(True)
+
+    print(comments_chosen)
 
 
 if __name__ == '__main__':

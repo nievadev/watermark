@@ -77,13 +77,19 @@ class Menu:
                 print(' -> ', end='')
 
                 for i, key in enumerate(self.args):
-                    print(str(key) + ': ' + str(options.get(key, '')), end='')
 
                     if i == len(self.args) - 1:
-                        print()
+                        t = text.get_changed(
+                            str(options.get(key, '')),
+                            color='yellow',
+                            style='bright'
+                        )
+
+                        print(str(key) + ': ' + t)
 
                     else:
-                        print('; ', end='')
+                        m = str(options.get(key, '')) + '; '
+                        print(str(key) + ': ' + m, end='')
 
             np = text.get_changed(
                 self.next_page.upper(),
@@ -108,7 +114,7 @@ class Menu:
 
             except KeyboardInterrupt:
                 print()
-                exit()
+                quit()
 
             print()
 

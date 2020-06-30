@@ -34,13 +34,13 @@ def clean_files(filetype):
 
 
 class Watermark:
+    OUTPUT_NAME = 'result'
     IMAGE_EXTENSIONS = 'png', 'jpg', 'jpeg'
     IMAGE_EXPORT_EXTENSION = 'jpg'
     VIDEO_EXTENSIONS = 'mp4', 'gif', 'webm'
     VIDEO_EXPORT_EXTENSION = 'mp4'
-    DELETE_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + 'log'
+    DELETE_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS + ('log', )
     VALID_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
-    OUTPUT_NAME = 'result'
     WATERMARK = '@el.rincon.voxero'
     TEXT_MARGIN = 4
     SUPPORTED_X = 'left', 'center', 'right'
@@ -53,7 +53,7 @@ class Watermark:
         'green': (0, 255, 0)
     }
 
-    def __init__(self, filepath, color, xy, size):
+    def __init__(self, filepath, color, xy, size, options=dict()):
         """Apply watermark to photo or video tool"""
 
         self.xy = xy
@@ -61,6 +61,8 @@ class Watermark:
         self.filepath = filepath
         self.filename, self.extension = os.path.splitext(self.filepath)
         self.size = size
+
+        self.export_as_name = options.get('export_as_name', Watermark.OUTPUT_NAME)
 
         def export():
             pass
@@ -181,14 +183,16 @@ class Watermark:
 
         img = img.convert('RGB')
 
-        def export(as_path=False):
-            if as_path:
+        def export(export_as_path=False):
+            if export_as_path:
                 _as = f'{self.filename}.{Watermark.IMAGE_EXPORT_EXTENSION}'
-                img.save(_as)
 
-                return
+                if not _as == self.filepath:
+                    os.remove(self.filepath)
 
-            _as = f'{Watermark.OUTPUT_NAME}.{Watermark.IMAGE_EXPORT_EXTENSION}'
+            else:
+                _as = f'{self.export_as_name}.{Watermark.IMAGE_EXPORT_EXTENSION}'
+
             img.save(_as)
 
         self.export = export
@@ -208,14 +212,14 @@ class Watermark:
 
         final_clip = editor.CompositeVideoClip([clip, txt_clip])
 
-        def export(as_path=False):
-            if as_path:
+        def export(export_as_path=False):
+            if export_as_path:
                 _as = f'{self.filename}.{Watermark.VIDEO_EXPORT_EXTENSION}'
                 final_clip.write_videofile(_as)
 
                 return
 
-            _as = f'{Watermark.OUTPUT_NAME}.{Watermark.VIDEO_EXPORT_EXTENSION}'
+            _as = f'{self.export_as_name}.{Watermark.VIDEO_EXPORT_EXTENSION}'
             final_clip.write_videofile(_as)
 
         self.export = export
