@@ -108,7 +108,13 @@ def main():
     max_per_page = comments_menu_max_per_page
 
     for i in range(COMMENTS_PER_IMAGE):
-        t1 = f'Comments grabbed: {[ c + 1 for c in comment_choices]}'
+        tc = text.get_changed(
+            f'{[ c + 1 for c in comment_choices ]}',
+            color='yellow',
+            style='bright',
+        )
+
+        t1 = f'Comments grabbed: {tc}'
         t2 = f'Vox: {title}, {comments} comments, url: {url}'
         t3 = f'Description: {vox.description}'
         t4 = f'Image url: {vox.image_url}'
@@ -137,9 +143,6 @@ def main():
     watermark = Watermark(filename, color, ('right', 'top'), 25)
 
     watermark.export(True)
-
-    print(comments_chosen)
-
 
 if __name__ == '__main__':
     main()

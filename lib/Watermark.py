@@ -8,7 +8,7 @@ import os
 
 text = Color()
 
-EXCEPTION_FILES = 'test.png',
+EXCEPTION_FILES = 'test.png', 'geckodriver.log',
 
 
 def clean_files(filetype):
