@@ -1,8 +1,8 @@
-# TODO: implement url argument
+# todo: implement press enter again to just use the already grabbed comments
 
-import requests
 import platform
-import time
+import click
+import requests
 from bs4 import BeautifulSoup as bs
 from lib.Color import Color
 from lib.Vox import Vox
@@ -16,10 +16,20 @@ PLATFORM = platform.system()
 NEXT_PAGE = 'n'
 PREVIOUS_PAGE = 'b'
 KEYBINDS = NEXT_PAGE, PREVIOUS_PAGE
-COMMENTS_PER_IMAGE = 4
 
 
-def parse_voxs(voxs):
+def request_get(url):
+    response = requests.get(url)
+
+    if not response.status_code == 200:
+        m = 'couldnt request the voxed HTML code. Response status code: '
+        text.print_error(m + str(response.status_code))
+        exit()
+
+    return response
+
+
+def get_voxs_info(voxs):
     voxs_list = list()
 
     for vox in voxs:
@@ -43,106 +53,63 @@ def parse_voxs(voxs):
     return voxs_list
 
 
-def main():
-    print('Getting voxed\'s HTML...')
+@click.command()
+@click.option(
+    '-u', '--url', 'url',
+    type=str,
+    default=''
+)
+def main(url):
+    if len(url) == 0:
+        print('Getting voxed\'s HTML...')
 
-    response = requests.get(VOXED_URL)
+        response = request_get(VOXED_URL)
 
-    if not response.status_code == 200:
-        m = 'couldnt request the voxed HTML code. Response status code: '
-        text.print_error(m + str(response.status_code))
-        exit()
+        text.print_success('got voxed\'s HTML code')
 
-    text.print_success('got voxed\'s HTML code')
+        parsed = bs(response.text, 'html.parser')
 
-    parsed = bs(response.text, 'html.parser')
+        voxs = parsed.select('div#voxList a')
 
-    darkmode = False
+        voxs_list = get_voxs_info(voxs)
 
-    if 'darkmode' in parsed.find('html').attrs.get('class'):
-        darkmode = True
+        # Sorting by number of comments
+        voxs_list = sorted(
+            voxs_list,
+            key=lambda x: x.get('comments'),
+            reverse=True
+        )
 
-    voxs = parsed.select('div#voxList a')
+        menu = Menu(voxs_list, {
+            'max_per_page': 20,
+            'ask_message': 'Pick one kjj',
+        }, 'title', 'comments')
 
-    voxs_list = parse_voxs(voxs)
-    voxs_list = sorted(
-        voxs_list,
-        key=lambda x: x.get('comments'),
-        reverse=True
-    )
+        vox_chosen = menu.start()
+        vox_chosen = voxs_list[vox_chosen]
 
-    menu = Menu(voxs_list, {
-        'max_per_page': 10,
-        'ask_message': 'Pick one kjj',
-    }, 'title', 'comments')
+        url = vox_chosen.get("url", "No url")
 
-    vox_chosen = menu.start()
-    vox_chosen = voxs_list[vox_chosen]
+        vox = Vox(url, parsed)
 
-    title = vox_chosen.get("title", "No title")
-    comments = vox_chosen.get("comments", "No comments")
-    url = vox_chosen.get("url", "No url")
+    else:
+        vox = Vox(url)
+
+    title = vox.title
+    comments = vox.total_comments
 
     print(f'Vox: \'{title}\', {comments} comments, {url}')
 
-    vox = Vox(url)
-    vox.make_image('vox.png')
+    vox.make_image()
 
-    if darkmode:
-        print('Applying watermark... (right top, white)')
-        color = 'white'
-
-    else:
-        print('Applying watermark... (right top, black)')
-        color = 'black'
-
-    watermark = Watermark(vox.path, color, ('right', 'top'), 25)
-
-    watermark.export(True)
-
-    comment_choices = list()
-
-    comments_menu_max_per_page = 10
-
-    index = 0
-    max_per_page = comments_menu_max_per_page
-
-    for i in range(COMMENTS_PER_IMAGE):
-        tc = text.get_changed(
-            f'{[ c + 1 for c in comment_choices ]}',
-            color='yellow',
-            style='bright',
-        )
-
-        t1 = f'Comments grabbed: {tc}'
-        t2 = f'Vox: {title}, {comments} comments, url: {url}'
-        t3 = f'Description: {vox.description}'
-        t4 = f'Image url: {vox.image_url}'
-        above_message = f'{t1}\n{t2}\n{t3}\n{t4}\n'
-
-        menu = Menu(vox.comments, {
-            'above_message': above_message,
-            'ask_message': f'Pick {COMMENTS_PER_IMAGE} comments',
-            'max_per_page': comments_menu_max_per_page,
-        }, 'comment', 'id')
-
-        menu.index = index
-        menu.in_screen = max_per_page
-
-        chosen = menu.start()
-
-        index = menu.index
-        max_per_page = menu.in_screen
-
-        comment_choices.append(chosen)
-
-    comments_chosen = [ vox.comments[n] for n in comment_choices ]
+    comments_chosen = vox.start_comments_menu()
 
     filename = vox.make_comments_image(comments_chosen)
 
-    watermark = Watermark(filename, color, ('right', 'top'), 25)
+    watermark = Watermark(filename, vox.watermark_color, ('right', 'top'), 25)
 
     watermark.export(True)
+
 
 if __name__ == '__main__':
     main()
