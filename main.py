@@ -1,21 +1,8 @@
 # todo: implement press enter again to just use the already grabbed comments
 
-import platform
 import click
-import requests
-# from bs4 import BeautifulSoup as bs
-from lib.Color import Color
 from lib.Vox import Vox
 from lib.Watermark import Watermark
-# from lib.Menu import Menu
-
-text = Color()
-
-VOXED_URL = 'https://www.voxed.net'
-PLATFORM = platform.system()
-NEXT_PAGE = 'n'
-PREVIOUS_PAGE = 'b'
-KEYBINDS = NEXT_PAGE, PREVIOUS_PAGE
 
 
 @click.command()
