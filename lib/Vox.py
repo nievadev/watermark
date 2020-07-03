@@ -33,23 +33,8 @@ class Vox:
     COMMENTS_PER_IMAGE = 4
     VOXED_URL = 'https://www.voxed.net'
 
-    def __init__(self, url, parsed=None):
-        if parsed is None:
-            print('Getting vox\'s information...')
-
-            response = requests.get(url)
-
-            if not response.status_code == 200:
-                m = 'couldnt request the voxed HTML code. Response status code: '
-                text.print_error(m + str(response.status_code))
-                exit()
-
-            text.print_success('got voxed\'s HTML code')
-
-            self.parsed = bs(response.text, 'html.parser')
-
-        else:
-            self.parsed = parsed
+    def __init__(self, url):
+        self.parsed = Vox._get_vox_html_code()
 
         self.options = Options()
         self.options.headless = True
@@ -119,7 +104,10 @@ class Vox:
 
         self.image.save(self.vox_path)
 
-        watermark = Watermark(self.vox_path, self.watermark_color, ('right', 'top'),  25)
+        path = self.vox_path
+        color = self.watermark_color
+
+        watermark = Watermark(path, color, ('right', 'top'),  25)
         watermark.export(True)
 
         text.print_success('image composited successfully. ')
@@ -281,6 +269,72 @@ class Vox:
             })
 
         return comments
+
+    def _parse_voxs_info(voxs):
+        voxs_list = list()
+
+        for vox in voxs:
+            info = dict()
+
+            css_selector = 'div.voxHeader div.voxComments.textShadon span'
+            comments = vox.select_one(css_selector)
+
+            if comments is None:
+                continue
+
+            url = Vox.VOXED_URL + vox.attrs.get('href')
+
+            t = text.get_changed(vox.select_one('h4').getText(), style='bright')
+            info['title'] = t
+            info['comments'] = int(comments.getText())
+            info['url'] = url
+
+            voxs_list.append(info)
+
+        return voxs_list
+
+    def _get_vox_html_code():
+        print('Getting vox\'s information...')
+
+        response = requests.get(Vox.VOXED_URL)
+
+        if not response.status_code == 200:
+            m = 'couldnt request the voxed HTML code. Response status code: '
+            text.print_error(m + str(response.status_code))
+            exit()
+
+        text.print_success('got voxed\'s HTML code')
+
+        parsed = bs(response.text, 'html.parser')
+
+        return parsed
+
+    @classmethod
+    def choose_vox(cls):
+        parsed = Vox._get_vox_html_code()
+
+        voxs = parsed.select('div#voxList a')
+
+        voxs_list = Vox._parse_voxs_info(voxs)
+
+        # Sorting by number of comments
+        voxs_list = sorted(
+            voxs_list,
+            key=lambda x: x.get('comments'),
+            reverse=True
+        )
+
+        menu = Menu(voxs_list, {
+            'max_per_page': 20,
+            'ask_message': 'Pick one kjj',
+        }, 'title', 'comments')
+
+        vox_chosen = menu.start()
+        vox_chosen = voxs_list[vox_chosen]
+
+        url = vox_chosen.get("url", "No url")
+
+        return cls(url)
 
     def __del__(self):
         print('Quitting driver...')
